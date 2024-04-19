@@ -1,4 +1,3 @@
-import os
 import cv2
 import numpy as np
 from keras.models import load_model
@@ -7,9 +6,8 @@ from keras.models import load_model
 IMG_SIZE = 200  # Define the size of the images
 LABELS = {0: 'NORMAL', 1: 'PNEUMONIA'}  # Mapping from index to label
 
-# Load the for_training model
+# Load the trained model
 model = load_model('kaggle.keras')
-
 
 # Load and preprocess the image
 def load_and_preprocess_image(img_path):
@@ -19,32 +17,20 @@ def load_and_preprocess_image(img_path):
     img = img / 255.0  # Normalize pixel values
     return img
 
+# Path to the image you want to make predictions on
+image_path = 'val/PNEUMONIA/person1946_bacteria_4875.jpeg'  # Replace with the path to your image
 
-# Path to the folder containing validation images
-val_folder = 'for_testing'
+# Load and preprocess the image
+image = load_and_preprocess_image(image_path)
 
-# Iterate over subfolders (NORMAL and PNEUMONIA)
-for label in LABELS.values():
-    label_folder = os.path.join(val_folder, label)
-    if os.path.isdir(label_folder):
-        # Iterate over images in the subfolder
-        for img_name in os.listdir(label_folder):
-            if img_name.startswith('.'):
-                continue  # Skip hidden files
-            img_path = os.path.join(label_folder, img_name)
+# Reshape the input data to match the expected input shape of the model
+image = np.expand_dims(image, axis=0)  # Add batch dimension
 
-            # Load and preprocess the image
-            image = load_and_preprocess_image(img_path)
+# Make prediction
+prediction = model.predict(image)
+predicted_class = np.argmax(prediction)
 
-            # Reshape the input data to match the expected input shape of the model
-            image = np.expand_dims(image, axis=0)  # Add batch dimension
+# Get the label corresponding to the predicted class
+predicted_label = LABELS[predicted_class]
 
-            # Make prediction using the loaded model
-            prediction = model.predict(image)
-            predicted_class = np.argmax(prediction)
-
-            # Get the predicted label
-            predicted_label = LABELS[predicted_class]
-
-            # Print the results
-            print(f'Image: {img_name}, Predicted class: {predicted_label}')
+print(f'The predicted class is: {predicted_label}')
